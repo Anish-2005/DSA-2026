@@ -1,3 +1,11 @@
+//1339. Maximum Product of Splitted Binary Tree
+//Given the root of a binary tree, split the binary 
+// tree into two subtrees by removing one edge such 
+// that the product of the sums of the subtrees is maximized.
+//
+//Return the maximum product of the sums of the two subtrees.
+//  Since the answer may be too large, return it modulo 10^9 + 7.
+
 class Solution {
     private long totalSum = 0;
     private long maxProduct = 0;
