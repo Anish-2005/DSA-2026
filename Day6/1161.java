@@ -1,3 +1,4 @@
+package Day6;
 class Solution {
     public int maxLevelSum(TreeNode root) {
         Queue<TreeNode> q = new LinkedList<>();
