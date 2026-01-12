@@ -35,8 +35,15 @@ function collectAllJavaFiles() {
 
 module.exports = (req, res) => {
   try {
-    const all = collectAllJavaFiles();
+    // prefer prebuilt index for serverless deployments
+    const publicFiles = path.join(process.cwd(), 'public', 'files.json');
+    if (fs.existsSync(publicFiles)) {
+      const data = JSON.parse(fs.readFileSync(publicFiles, 'utf8'));
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify(data));
+    }
 
+    const all = collectAllJavaFiles();
     const files = all.map(({ fp, base }) => {
       const rel = path.relative(base, fp).split(path.sep).join('/');
       const name = path.basename(fp);

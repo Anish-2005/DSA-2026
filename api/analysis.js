@@ -35,6 +35,13 @@ function collectAllJavaFiles() {
 
 module.exports = (req, res) => {
   try {
+    const publicAnalysis = path.join(process.cwd(), 'public', 'analysis.json');
+    if (fs.existsSync(publicAnalysis)) {
+      const data = JSON.parse(fs.readFileSync(publicAnalysis, 'utf8'));
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify(data));
+    }
+
     const all = collectAllJavaFiles();
 
     const items = all.map(({ fp, base }) => {

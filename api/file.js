@@ -9,10 +9,20 @@ module.exports = (req, res) => {
       return res.end(JSON.stringify({ error: 'missing path parameter' }));
     }
 
+    // prefer prebuilt contents map in public/files_contents.json
+    const contentsFile = path.join(process.cwd(), 'public', 'files_contents.json');
+    const parts = p.split('/').filter(Boolean);
+    const relPath = parts.join('/');
+    if (fs.existsSync(contentsFile)) {
+      const map = JSON.parse(fs.readFileSync(contentsFile, 'utf8'));
+      if (map[relPath]) {
+        res.setHeader('Content-Type', 'application/json');
+        return res.end(JSON.stringify({ content: map[relPath] }));
+      }
+    }
+
     // try multiple base directories (cwd and function parent)
     const bases = [process.cwd(), path.resolve(__dirname, '..')];
-    const parts = p.split('/').filter(Boolean);
-
     let found = false;
     for (const base of bases) {
       const target = path.join(base, ...parts);
