@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 
 function walk(dir, list) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (e) {
+    return;
+  }
   for (const e of entries) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) walk(full, list);
@@ -10,13 +15,29 @@ function walk(dir, list) {
   }
 }
 
+function collectAllJavaFiles() {
+  const bases = [process.cwd(), path.resolve(__dirname, '..')];
+  const seen = new Set();
+  const all = [];
+  for (const base of bases) {
+    const list = [];
+    walk(base, list);
+    for (const fp of list) {
+      const rel = path.relative(base, fp).split(path.sep).join('/');
+      if (!seen.has(rel)) {
+        seen.add(rel);
+        all.push({ fp, base });
+      }
+    }
+  }
+  return all;
+}
+
 module.exports = (req, res) => {
   try {
-    const base = path.resolve(process.cwd());
-    const all = [];
-    walk(base, all);
+    const all = collectAllJavaFiles();
 
-    const items = all.map(fp => {
+    const items = all.map(({ fp, base }) => {
       const rel = path.relative(base, fp).split(path.sep).join('/');
       const content = fs.readFileSync(fp, 'utf8');
       const lines = content.split(/\r?\n/).length;
