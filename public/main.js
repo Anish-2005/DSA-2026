@@ -37,6 +37,24 @@ function debounce(fn, delay = 250) {
   };
 }
 
+function parseDayName(name) {
+  const m = /^Day(\d+)$/.exec(name);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function sortGroupNames(arr) {
+  return arr.slice().sort((a, b) => {
+    const an = parseDayName(a);
+    const bn = parseDayName(b);
+    if (an !== null && bn !== null) return an - bn;
+    if (an !== null) return -1;
+    if (bn !== null) return 1;
+    if (a === 'root' && b !== 'root') return -1;
+    if (b === 'root' && a !== 'root') return 1;
+    return a.localeCompare(b);
+  });
+}
+
 /* ---------------- init ---------------- */
 
 window.addEventListener("load", async () => {
@@ -45,7 +63,7 @@ window.addEventListener("load", async () => {
     state.files = data.files;
     state.filtered = data.files;
 
-    renderDayFilter(Object.keys(data.grouped).sort());
+    renderDayFilter(sortGroupNames(Object.keys(data.grouped)));
     renderGroups(state.filtered);
 
     const analysis = await fetchJSON("/api/analysis");
@@ -64,7 +82,7 @@ window.addEventListener("load", async () => {
 function renderDayFilter(days) {
   const sel = document.getElementById("dayFilter");
   sel.innerHTML = `<option value="">All Days</option>`;
-  days.forEach(d => sel.appendChild(el("option", null, d)));
+  sortGroupNames(days).forEach(d => sel.appendChild(el("option", null, d)));
 
   sel.onchange = applyFilters;
   document
@@ -96,7 +114,7 @@ function renderGroups(files) {
     (grouped[g] ??= []).push(f);
   });
 
-  Object.keys(grouped).sort().forEach(group => {
+  sortGroupNames(Object.keys(grouped)).forEach(group => {
     const box = el("div", "group-box");
     const header = el("div", "flex justify-between items-center");
 
@@ -219,7 +237,7 @@ function renderAnalysis(a) {
     <div>Avg lines/file: ${a.avgLines}</div>
   `;
 
-  const labels = Object.keys(a.perDay).sort();
+  const labels = sortGroupNames(Object.keys(a.perDay));
   const counts = labels.map(k => a.perDay[k].count);
 
   const ctx = document.getElementById("dayChart");
