@@ -4,6 +4,7 @@
   - persistent UI state
   - optimized rendering
   - theme-aware charts
+  - mobile responsive interactions
 */
 
 const state = {
@@ -160,6 +161,16 @@ function renderGroups(files) {
             .forEach(x => x.classList.remove("selected"));
           item.classList.add("selected");
           openFile(file.path);
+
+          // On small screens, hide the sidebar after selecting a file
+          try {
+            if (window.innerWidth < 768) {
+              const sb = document.getElementById("sidebar");
+              if (sb) sb.classList.add("hidden");
+            }
+          } catch (e) {
+            /* ignore */
+          }
         };
 
         list.appendChild(item);
@@ -228,6 +239,35 @@ function flash(id, text) {
   };
 })();
 
+(function initSidebar() {
+  const btn = document.getElementById("sidebarToggle");
+  const closeBtn = document.getElementById("closeSidebar");
+  const sb = document.getElementById("sidebar");
+  const main = document.getElementById("mainContent");
+  if (!btn || !sb) return;
+
+  const showSidebar = () => sb.classList.remove("hidden");
+  const hideSidebar = () => sb.classList.add("hidden");
+
+  btn.onclick = showSidebar;
+  if (closeBtn) closeBtn.onclick = hideSidebar;
+
+  // Hide sidebar when tapping main content on small screens
+  if (main) {
+    main.addEventListener("click", () => {
+      if (window.innerWidth < 768 && !sb.classList.contains("hidden")) hideSidebar();
+    });
+  }
+
+  // Ensure sidebar visible on larger screens after resize
+  window.addEventListener("resize", () => {
+    try {
+      if (window.innerWidth >= 768) showSidebar();
+      else hideSidebar();
+    } catch (e) {}
+  });
+})();
+
 /* ---------------- analytics ---------------- */
 
 function renderAnalysis(a) {
@@ -255,6 +295,8 @@ function renderAnalysis(a) {
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
         x: { ticks: { color: "#94a3b8" } },
