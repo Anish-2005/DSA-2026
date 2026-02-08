@@ -1,6 +1,6 @@
 # DSA Solutions Browser
 
-![banner](https://img.shields.io/badge/DSA-Explorer-blue?style=for-the-badge)
+![banner](https://img.shields.io/badge/DSA-Solutions-blue?style=for-the-badge)
 
 An interactive local web app to browse, preview and get analytics for your solved DSA problems (Java). Beautiful, minimal UI with syntax highlighting and lightweight analytics.
 
