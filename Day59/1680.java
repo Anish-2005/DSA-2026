@@ -4,7 +4,7 @@
 // string formed by concatenating the binary representations 
 // of 1 to n in order, modulo 109 + 7.
 
-class Solution {
+class Solution { //class
     public int concatenatedBinary(int n) {// function with input n
         long mod = 1000000007; //modulo 10^9 + 7
         long res = 0; //resultant output
