@@ -14,24 +14,6 @@ class Solution {
     }
 }
 
-//Quick Visualization
-//Example: "1001"
+//0 dividing into segments of 1s. 01 divides into 2 segments checks.
 
-//1 0 0 1
-//^     ^
-//segment1  segment2
-
-//Two separate segments → false
-//Example: "1111000"
-
-//1111 000
-//^^^^
-//one segment
-//Only one segment → true
-
-//Example: "110"
-//11 0
-//^^
-//one segment
-
-//Result → true.
+//if not found then result= true.
