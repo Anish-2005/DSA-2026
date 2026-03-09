@@ -15,3 +15,40 @@ class Solution {
         return new String(res); //convert the character array to a string and return it
     }
 }
+
+/* 
+Example
+
+nums = ["010",
+        "111",
+        "001"]
+
+Look at the diagonal elements:
+   0 1 0
+   ↑
+   1 1 1
+     ↑
+   0 0 1
+       ↑
+Diagonal = 0 1 1
+Flip each bit:
+0 → 1
+1 → 0
+1 → 0
+Result:
+100
+Check:
+
+010
+111
+001
+---
+100   (different from all)
+
+Key idea:
+
+nums[i][i] ≠ result[i]
+
+So the new string differs from the i-th string at position i, 
+guaranteeing it is not in the array.
+*/
