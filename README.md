@@ -1,4 +1,4 @@
-# DSA Solutions Browser
+# DSA Solutions 2026
 
 ![banner](https://img.shields.io/badge/DSA-Solutions-blue?style=for-the-badge)
 
