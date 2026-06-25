@@ -26,52 +26,23 @@ nums[0..2] = [1,2,2]
 nums[1..3] = [2,2,3]
 So there are 5 such subarrays. */
 
-
 class Solution {
-
-    class Fenwick {
-        int[] bit;
-        int n;
-
-        Fenwick(int n) {
-            this.n = n;
-            bit = new int[n + 2];
-        }
-
-        void update(int idx, int val) {
-            while (idx <= n) {
-                bit[idx] += val;
-                idx += idx & -idx;
-            }
-        }
-
-        int query(int idx) {
-            int sum = 0;
-            while (idx > 0) {
-                sum += bit[idx];
-                idx -= idx & -idx;
-            }
-            return sum;
-        }
-    }
-
-    public long countMajoritySubarrays(int[] nums, int target) {
+    public int countMajoritySubarrays(int[] nums, int target) {
         int n = nums.length;
+        int ans = 0;
 
-        int offset = n + 2;
-        Fenwick ft = new Fenwick(2 * n + 5);
+        for (int i = 0; i < n; i++) {
+            int cnt = 0;
 
-        long ans = 0;
-        int pref = 0;
+            for (int j = i; j < n; j++) {
+                if (nums[j] == target) {
+                    cnt++;
+                }
 
-        ft.update(offset, 1);
-
-        for (int x : nums) {
-            pref += (x == target) ? 1 : -1;
-
-            ans += ft.query(pref + offset - 1);
-
-            ft.update(pref + offset, 1);
+                if (cnt * 2 > (j - i + 1)) {
+                    ans++;
+                }
+            }
         }
 
         return ans;
