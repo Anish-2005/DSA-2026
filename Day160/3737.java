@@ -28,6 +28,7 @@ So there are 5 such subarrays. */
 
 
 class Solution {
+
     class Fenwick {
         int[] bit;
         int n;
@@ -54,7 +55,7 @@ class Solution {
         }
     }
 
-    public long countSubarrays(int[] nums, int target) {
+    public long countMajoritySubarrays(int[] nums, int target) {
         int n = nums.length;
 
         int offset = n + 2;
@@ -63,13 +64,10 @@ class Solution {
         long ans = 0;
         int pref = 0;
 
-        ft.update(offset, 1); // prefix sum = 0
+        ft.update(offset, 1);
 
         for (int x : nums) {
-            if (x == target)
-                pref++;
-            else
-                pref--;
+            pref += (x == target) ? 1 : -1;
 
             ans += ft.query(pref + offset - 1);
 
