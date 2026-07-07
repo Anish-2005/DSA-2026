@@ -23,11 +23,9 @@ The sum of digits is sum = 1 + 2 + 3 + 4 = 10.
 Therefore, the answer is x * sum = 1234 * 10 = 12340. */
 
 class Solution {
-    public int sumAndMultiply(int n) {
-        if (n == 0) return 0;
-
-        int x = 0;
-        int sum = 0;
+    public long sumAndMultiply(int n) {
+        long x = 0;
+        long sum = 0;
 
         String s = String.valueOf(n);
 
