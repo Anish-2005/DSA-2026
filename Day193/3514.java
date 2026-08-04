@@ -26,22 +26,42 @@ The unique XOR values are {1, 3}. Thus, the output is 2. */
 
 class Solution {
     public int uniqueXorTriplets(int[] nums) {
-        int n = nums.length;
+        int MAX = 2048;
 
-        HashSet<Integer> pairs = new HashSet<>();
+        boolean[] one = new boolean[MAX];
+        boolean[] two = new boolean[MAX];
+        boolean[] three = new boolean[MAX];
 
-        HashSet<Integer> ans = new HashSet<>();
+        for (int num : nums) {
 
-        for (int k = 0; k < n; k++) {
-
-            for (int i = 0; i <= k; i++) {
-                pairs.add(nums[i] ^ nums[k]);
+            // Extend existing pairs to triplets
+            for (int x = 0; x < MAX; x++) {
+                if (two[x]) {
+                    three[x ^ num] = true;
+                }
             }
-            for (int x : pairs) {
-                ans.add(x ^ nums[k]);
+
+            // Extend existing singles to pairs
+            for (int x = 0; x < MAX; x++) {
+                if (one[x]) {
+                    two[x ^ num] = true;
+                }
+            }
+
+            // i = j = k cases are allowed
+            one[num] = true;
+            two[0] = true;       // num ^ num
+            three[num] = true;   // num ^ num ^ num
+        }
+
+        int count = 0;
+
+        for (boolean possible : three) {
+            if (possible) {
+                count++;
             }
         }
 
-        return ans.size();
+        return count;
     }
 }
