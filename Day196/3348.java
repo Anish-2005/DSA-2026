@@ -18,10 +18,8 @@ import java.util.*;
 
 class Solution {
 
-    // Prime contribution of digits 1..9
-    // index: {power of 2, power of 3, power of 5, power of 7}
     private static final int[][] FACTORS = {
-        {0, 0, 0, 0}, // 0 - unused
+        {0, 0, 0, 0}, // 0
         {0, 0, 0, 0}, // 1
         {1, 0, 0, 0}, // 2
         {0, 1, 0, 0}, // 3
@@ -35,303 +33,375 @@ class Solution {
 
     public String smallestNumber(String num, long t) {
 
-        // --------------------------------------------
-        // STEP 1: Factorize t into 2, 3, 5 and 7
-        // --------------------------------------------
+        // ========================================
+        // 1. Factorize t
+        // ========================================
 
-        long temp = t;
+        int[] need = new int[4];
 
-        int need2 = 0;
-        int need3 = 0;
-        int need5 = 0;
-        int need7 = 0;
-
-        while (temp % 2 == 0) {
-            need2++;
-            temp /= 2;
+        while (t % 2 == 0) {
+            need[0]++;
+            t /= 2;
         }
 
-        while (temp % 3 == 0) {
-            need3++;
-            temp /= 3;
+        while (t % 3 == 0) {
+            need[1]++;
+            t /= 3;
         }
 
-        while (temp % 5 == 0) {
-            need5++;
-            temp /= 5;
+        while (t % 5 == 0) {
+            need[2]++;
+            t /= 5;
         }
 
-        while (temp % 7 == 0) {
-            need7++;
-            temp /= 7;
+        while (t % 7 == 0) {
+            need[3]++;
+            t /= 7;
         }
 
-        // t contains some other prime factor
-        if (temp != 1) {
+        // Contains prime factors other than 2,3,5,7
+        if (t != 1) {
             return "-1";
         }
 
-        int[] target = {need2, need3, need5, need7};
+        // ========================================
+        // 2. Try same length
+        // ========================================
 
-        // --------------------------------------------
-        // STEP 2: Try to construct answer
-        // with same length as num
-        // --------------------------------------------
+        String ans = solveSameLength(num, need);
 
-        String sameLength = buildGreaterOrEqual(num, target);
-
-        if (sameLength != null) {
-            return sameLength;
+        if (ans != null) {
+            return ans;
         }
 
-        // --------------------------------------------
-        // STEP 3: Same length impossible.
-        // Build the smallest number of length n + 1.
-        // --------------------------------------------
+        // ========================================
+        // 3. Need a longer number
+        // ========================================
 
-        return buildSmallest(num.length() + 1, target);
+        int minLen = minDigits(need);
+
+        int length = Math.max(num.length() + 1, minLen);
+
+        return buildSmallest(length, need);
     }
 
 
-    // ==========================================================
-    // Build smallest zero-free number >= num
-    // ==========================================================
+    // =========================================================
+    // Try finding smallest valid number >= num
+    // having exactly num.length() digits
+    // =========================================================
 
-    private String buildGreaterOrEqual(String num, int[] target) {
+    private String solveSameLength(String num, int[] target) {
 
         int n = num.length();
 
-        int[] remaining = target.clone();
-
-        StringBuilder prefix = new StringBuilder();
-
         /*
-         * First try following num exactly.
+         * prefixNeed[i]
          *
-         * Whenever something becomes impossible,
-         * we backtrack and increase a previous digit.
+         * Remaining prime requirements after consuming
+         * num[0 ... i-1].
          */
+
+        int[][] prefixNeed = new int[n + 1][4];
+
+        for (int j = 0; j < 4; j++) {
+            prefixNeed[0][j] = target[j];
+        }
+
+        boolean prefixZeroFree = true;
 
         for (int i = 0; i < n; i++) {
 
-            int originalDigit = num.charAt(i) - '0';
+            int digit = num.charAt(i) - '0';
 
-            // zero cannot be used
-            if (originalDigit == 0) {
+            if (digit == 0) {
+                prefixZeroFree = false;
 
-                // We already match prefix.
-                // At this position choose smallest digit > 0.
-                for (int d = 1; d <= 9; d++) {
-
-                    int[] next = subtract(remaining, d);
-
-                    if (canFill(next, n - i - 1)) {
-
-                        return prefix.toString()
-                                + d
-                                + buildSuffix(n - i - 1, next);
-                    }
+                // after a zero, exact prefix cannot be used
+                for (int j = i + 1; j <= n; j++) {
+                    prefixNeed[j] = null;
                 }
 
-                return backtrack(num, prefix, remaining, i);
+                break;
             }
 
-            // Try keeping same digit
-            int[] next = subtract(remaining, originalDigit);
+            prefixNeed[i + 1] =
+                    subtract(prefixNeed[i], digit);
+        }
 
-            if (canFill(next, n - i - 1)) {
 
-                prefix.append(originalDigit);
-                remaining = next;
+        // ========================================
+        // Check if num itself works
+        // ========================================
 
+        if (prefixZeroFree &&
+            satisfied(prefixNeed[n])) {
+
+            return num;
+        }
+
+
+        // ========================================
+        // Find rightmost position we can increase
+        // ========================================
+
+        for (int i = n - 1; i >= 0; i--) {
+
+            // Exact prefix before i must be valid
+            if (prefixNeed[i] == null) {
                 continue;
             }
 
-            /*
-             * Keeping same digit doesn't work.
-             *
-             * Try increasing current digit.
-             */
+            int currentDigit =
+                    num.charAt(i) - '0';
 
-            for (int d = originalDigit + 1; d <= 9; d++) {
-
-                next = subtract(remaining, d);
-
-                if (canFill(next, n - i - 1)) {
-
-                    return prefix.toString()
-                            + d
-                            + buildSuffix(n - i - 1, next);
-                }
-            }
-
-            // Current position can't be fixed.
-            return backtrack(num, prefix, remaining, i);
-        }
-
-        // Exact num itself works
-        if (isSatisfied(remaining)) {
-            return prefix.toString();
-        }
-
-        return backtrack(num, prefix, remaining, n);
-    }
+            int start =
+                    Math.max(1, currentDigit + 1);
 
 
-    // ==========================================================
-    // Backtrack to an earlier position and increase its digit
-    // ==========================================================
+            // Try smallest larger digit
+            for (int d = start; d <= 9; d++) {
 
-    private String backtrack(
-            String num,
-            StringBuilder prefix,
-            int[] currentRemaining,
-            int position) {
+                int[] remaining =
+                        subtract(prefixNeed[i], d);
 
-        int n = num.length();
+                int slots =
+                        n - i - 1;
 
-        /*
-         * Recompute prime requirements for every possible
-         * backtracking position.
-         *
-         * n is small enough that this is fine.
-         */
+                if (minDigits(remaining) <= slots) {
 
-        for (int pos = position - 1; pos >= 0; pos--) {
+                    StringBuilder result =
+                            new StringBuilder();
 
-            int[] remaining = getRemainingForPrefix(num, pos);
-
-            int originalDigit = num.charAt(pos) - '0';
-
-            for (int d = Math.max(1, originalDigit + 1); d <= 9; d++) {
-
-                int[] next = subtract(remaining, d);
-
-                int slots = n - pos - 1;
-
-                if (canFill(next, slots)) {
-
-                    StringBuilder result = new StringBuilder();
-
-                    // Copy unchanged prefix
-                    for (int j = 0; j < pos; j++) {
-                        result.append(num.charAt(j));
-                    }
+                    result.append(
+                        num.substring(0, i)
+                    );
 
                     result.append(d);
 
-                    result.append(buildSuffix(slots, next));
+                    result.append(
+                        buildSmallest(slots, remaining)
+                    );
 
                     return result.toString();
                 }
             }
         }
 
+
+        // ========================================
+        // Special case:
+        //
+        // num contains zero.
+        //
+        // Example:
+        // 1024
+        //
+        // We can keep "1" and replace 0 with >=1.
+        // ========================================
+
+        int[] remaining = target.clone();
+
+        StringBuilder prefix =
+                new StringBuilder();
+
+        for (int i = 0; i < n; i++) {
+
+            int current =
+                    num.charAt(i) - '0';
+
+            if (current == 0) {
+
+                for (int d = 1; d <= 9; d++) {
+
+                    int[] next =
+                            subtract(remaining, d);
+
+                    int slots =
+                            n - i - 1;
+
+                    if (minDigits(next) <= slots) {
+
+                        return prefix
+                                + String.valueOf(d)
+                                + buildSmallest(
+                                    slots,
+                                    next
+                                );
+                    }
+                }
+
+                break;
+            }
+
+            prefix.append(current);
+
+            remaining =
+                    subtract(remaining, current);
+        }
+
         return null;
     }
 
 
-    // ==========================================================
-    // Remaining requirement after using prefix num[0..length-1]
-    // ==========================================================
+    // =========================================================
+    // Build lexicographically smallest number of given length
+    // satisfying remaining prime requirements
+    // =========================================================
 
-    private int[] getRemainingForPrefix(String num, int length) {
+    private String buildSmallest(
+            int length,
+            int[] target) {
 
-        int[] remaining = currentTarget.clone();
+        StringBuilder result =
+                new StringBuilder();
 
-        for (int i = 0; i < length; i++) {
+        int[] need =
+                target.clone();
 
-            int digit = num.charAt(i) - '0';
 
-            if (digit == 0) {
-                break;
+        for (int pos = 0;
+             pos < length;
+             pos++) {
+
+            int slots =
+                    length - pos - 1;
+
+
+            // Try digits in increasing order
+            for (int d = 1; d <= 9; d++) {
+
+                int[] next =
+                        subtract(need, d);
+
+                if (minDigits(next) <= slots) {
+
+                    result.append(d);
+
+                    need = next;
+
+                    break;
+                }
             }
-
-            remaining = subtract(remaining, digit);
         }
 
-        return remaining;
+        return result.toString();
     }
 
 
-    // Need target globally for helper
-    private int[] currentTarget;
+    // =========================================================
+    // Subtract digit's prime contribution
+    // =========================================================
 
+    private int[] subtract(
+            int[] need,
+            int digit) {
 
-    // ==========================================================
-    // Subtract contribution of a digit
-    // ==========================================================
+        int[] result =
+                new int[4];
 
-    private int[] subtract(int[] need, int digit) {
+        for (int i = 0; i < 4; i++) {
 
-        return new int[]{
-            Math.max(0, need[0] - FACTORS[digit][0]),
-            Math.max(0, need[1] - FACTORS[digit][1]),
-            Math.max(0, need[2] - FACTORS[digit][2]),
-            Math.max(0, need[3] - FACTORS[digit][3])
-        };
+            result[i] =
+                    Math.max(
+                        0,
+                        need[i]
+                        - FACTORS[digit][i]
+                    );
+        }
+
+        return result;
     }
 
 
-    // ==========================================================
-    // Can remaining requirements fit inside slots?
-    // ==========================================================
+    // =========================================================
+    // Minimum digits needed
+    // =========================================================
 
-    private boolean canFill(int[] need, int slots) {
+    private int minDigits(int[] need) {
 
-        return minDigits(
-                need[0],
-                need[1],
-                need[2],
-                need[3]
-        ) <= slots;
-    }
-
-
-    // ==========================================================
-    // Minimum digits required for given prime requirements
-    //
-    // Instead of large DP, greedily pack prime factors into
-    // digits 8,9,6,4, etc.
-    // ==========================================================
-
-    private int minDigits(int two, int three, int five, int seven) {
+        int two   = need[0];
+        int three = need[1];
+        int five  = need[2];
+        int seven = need[3];
 
         int count = 0;
 
-        // 5 and 7 each require their own digit
+
+        // -----------------------------------------
+        // 5 and 7 cannot combine with other primes
+        // -----------------------------------------
+
         count += five;
         count += seven;
 
-        /*
-         * For 2 and 3:
-         *
-         * 8 = 2^3
-         * 9 = 3^2
-         * 6 = 2*3
-         *
-         * We try combining leftover 2 and 3 into 6.
-         */
 
+        // -----------------------------------------
+        // Pack 2s and 3s optimally
+        //
+        // Digits:
+        //
+        // 8 = 2^3
+        // 9 = 3^2
+        // 6 = 2*3
+        // 4 = 2^2
+        // 2 = 2
+        // 3 = 3
+        // -----------------------------------------
+
+
+        // First use 8s
         count += two / 3;
         two %= 3;
 
+
+        // Use 9s
         count += three / 2;
         three %= 2;
 
-        // leftovers
+
+        // Remaining possibilities are tiny
+
+        if (two == 0 && three == 0) {
+            return count;
+        }
+
+
         if (two == 1 && three == 1) {
-            count++; // digit 6
+
+            // 6
+            count++;
+
+        } else if (two == 2 && three == 1) {
+
+            /*
+             * Need:
+             *
+             * 2^2 * 3
+             *
+             * Can use:
+             *
+             * 2 * 6
+             *
+             * OR
+             *
+             * 3 * 4
+             */
+
+            count += 2;
+
         } else {
 
+            if (two == 1) {
+                count++;       // 2
+            }
+
             if (two == 2) {
-                count++; // digit 4
-            } else if (two == 1) {
-                count++; // digit 2
+                count++;       // 4
             }
 
             if (three == 1) {
-                count++; // digit 3
+                count++;       // 3
             }
         }
 
@@ -339,73 +409,11 @@ class Solution {
     }
 
 
-    // ==========================================================
-    // Build lexicographically smallest suffix
-    // ==========================================================
+    private boolean satisfied(int[] need) {
 
-    private String buildSuffix(int length, int[] need) {
-
-        StringBuilder result = new StringBuilder();
-
-        for (int pos = 0; pos < length; pos++) {
-
-            int remainingSlots = length - pos - 1;
-
-            // smallest digit first
-            for (int d = 1; d <= 9; d++) {
-
-                int[] next = subtract(need, d);
-
-                if (canFill(next, remainingSlots)) {
-
-                    result.append(d);
-                    need = next;
-
-                    break;
-                }
-            }
-        }
-
-        return result.toString();
-    }
-
-
-    // ==========================================================
-    // Build smallest number of a specified length
-    // ==========================================================
-
-    private String buildSmallest(int length, int[] target) {
-
-        int[] need = target.clone();
-
-        StringBuilder result = new StringBuilder();
-
-        for (int pos = 0; pos < length; pos++) {
-
-            int remainingSlots = length - pos - 1;
-
-            for (int d = 1; d <= 9; d++) {
-
-                int[] next = subtract(need, d);
-
-                if (canFill(next, remainingSlots)) {
-
-                    result.append(d);
-                    need = next;
-                    break;
-                }
-            }
-        }
-
-        return result.toString();
-    }
-
-
-    private boolean isSatisfied(int[] need) {
-
-        return need[0] == 0
-                && need[1] == 0
-                && need[2] == 0
-                && need[3] == 0;
+        return need[0] == 0 &&
+               need[1] == 0 &&
+               need[2] == 0 &&
+               need[3] == 0;
     }
 }
