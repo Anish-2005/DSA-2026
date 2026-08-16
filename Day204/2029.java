@@ -19,31 +19,26 @@ The sum of the removed stones is 1 + 2 = 3 and is divisible by 3. Therefore, Bob
 
 class Solution {
     public boolean stoneGameIX(int[] stones) {
+        int cnt0 = 0;
         int cnt1 = 0;
         int cnt2 = 0;
 
         for (int stone : stones) {
-            if (stone % 3 == 1) {
+            int rem = stone % 3;
+
+            if (rem == 0) {
+                cnt0++;
+            } else if (rem == 1) {
                 cnt1++;
-            } else if (stone % 3 == 2) {
+            } else {
                 cnt2++;
             }
         }
 
-        // If only one type of non-zero remainder exists
-        if (cnt1 == 0 && cnt2 == 0) {
-            return false;
+        if (cnt0 % 2 == 0) {
+            return cnt1 > 0 && cnt2 > 0;
         }
 
-        if (cnt1 == 0) {
-            return cnt2 >= 3;
-        }
-
-        if (cnt2 == 0) {
-            return cnt1 >= 3;
-        }
-
-        // Both types exist
-        return Math.abs(cnt1 - cnt2) <= 2;
+        return Math.abs(cnt1 - cnt2) > 2;
     }
 }
