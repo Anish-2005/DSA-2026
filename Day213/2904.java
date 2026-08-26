@@ -31,42 +31,33 @@ Explanation: There are 7 beautiful substrings in this example:
 7. The substring "100011001".
 The length of the shortest beautiful substring is 5.
 The lexicographically smallest beautiful substring with length 5 is the substring "11001". */
-
-
 class Solution {
     public String shortestBeautifulSubstring(String s, int k) {
         int n = s.length();
-
-        int[] pos = new int[n];
-        int count = 0;
-
-        for (int i = 0; i < n; i++) {
-            if (s.charAt(i) == '1') {
-                pos[count++] = i;
-            }
-        }
-
-        if (count < k) {
-            return "";
-        }
-
-        String ans = null;
+        int left = 0, ones = 0;
         int minLen = Integer.MAX_VALUE;
+        String ans = "";
 
-        for (int i = k - 1; i < count; i++) {
-            int end = pos[i];
+        for (int right = 0; right < n; right++) {
+            if (s.charAt(right) == '1') {
+                ones++;
+            }
 
-            int start = (i - k >= 0) ? pos[i - k] + 1 : 0;
+            while (ones == k) {
+                while (s.charAt(left) == '0') {
+                    left++;
+                }
 
-            int len = end - start + 1;
+                int len = right - left + 1;
+                String curr = s.substring(left, right + 1);
 
-            String sub = s.substring(start, end + 1);
+                if (len < minLen || (len == minLen && curr.compareTo(ans) < 0)) {
+                    minLen = len;
+                    ans = curr;
+                }
 
-            if (len < minLen ||
-                (len == minLen && (ans == null || sub.compareTo(ans) < 0))) {
-
-                minLen = len;
-                ans = sub;
+                ones--;
+                left++;
             }
         }
 
